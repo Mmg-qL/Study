@@ -375,14 +375,35 @@ int main(){
 > * 只能在有血缘关系的进程间使用管道
 
 **读管道：**
-
- 	1. 管道有数据：read返回实际读到的字节数 
-	2. 管道无数据：1）无写端，read返回0；2）有写端，read阻塞等待
+1. 管道有数据：read返回实际读到的字节数 
+2. 管道无数据：1）无写端，read返回0；2）有写端，read阻塞等待
 
 **写管道：**
 
 1. 无读端，异常终止。(SIGPIPE导致的)
 2. 有读端：1）管道已满，阻塞等待；2）管道未满，返回写出的字节个数
+
+
+
+#### 硬链接与软链接
+
+* 硬链接是指向文件系统中相同inode（索引节点）的另一个目录项。
+* 硬链接和原始文件是完全相同的，它们共享相同的数据块和inode，因此它们拥有相同的文件大小、权限、时间戳等属性。
+* 硬链接不能跨越不同的文件系统，也就是说，不能为挂载在不同文件系统上的文件创建硬链接。
+* 软链接不共享原始文件的数据块，它实际上是一个独立的文件，有自己的inode和属性。
+* 软链接可以跨越不同的文件系统，可以指向其他文件系统上的文件或目录。
+* 删除硬链接不会影响原始文件 ，如果软链接指向的原始文件被移动或删除，软链接就会变成一个“死链接”（dangling link），访问它时会得到错误信息。
+
+```c++
+#硬链接
+ln /path/to/original/file /path/to/link
+#软链接
+ln -s /path/to/original/file /path/to/link
+```
+
+
+
+
 
 ## C++和C语言
 
@@ -393,6 +414,12 @@ int main(){
 > * 全局区：全局变量，静态变量，程序结束之后释放
 > * 常量存储区：存储常量，如字符串常量
 > * 代码区：存储程序的执行代码。内存只读，存放机器码
+
+
+
+#### 析构函数
+
+* 类中如果没有指针一般不需要写析构函数
 
 
 
@@ -441,6 +468,45 @@ int main(){
 > * 不能用于函数形参中的定义
 > * 不能用于定义数组
 > * 不能用于类模板函数模板
+
+
+
+#### const
+
+* 类里面的const
+
+```c++
+class A{
+   ...
+   double real() const{return re;}
+   double imag() const{return im;}
+   ...
+}
+# 如果不加const修饰，表示函数中的值可以修改，在以下语句中有冲突
+const A a(2,1);
+```
+
+* 传值或者引用的时候能用尽量都用
+
+
+
+#### friend友元
+
+* 同一个class里面各个成员(包含private)互为friend
+
+
+
+#### return
+
+* 何时by value何时by reference
+* 如果是在函数内部创建一个新的临时object，需要传出该object就不能return reference，因为结束后释放，不能保存
+* return by reference速度会相对快一些
+
+
+
+#### 浅拷贝与深拷贝
+
+* 浅拷贝没有申请新的内存空间，容易造成内存泄露
 
 
 
@@ -652,6 +718,50 @@ int main(){
 > * 会一直复制直到遇到源字符串的null终止符
 > * 不会检查目标字符串内存是否可以容下源字符串，如果目标内存不够，容易造成缓存溢出
 > * 可以用strncpy或者strlcpy来确保不会导致缓冲区溢出，确保源字符串有null终止符号
+
+
+
+#### static
+
+* 静态数据成员是类的全局变量，所有对象共享同一份数据。它们必须在类外进行定义和初始化。 
+* 静态成员函数是与类相关联的函数，不依赖于类的任何对象实例。它们可以访问静态数据成员，但不能访问非静态成员。 
+
+```c++
+#include <iostream>
+
+class MyClass {
+public:
+    // 静态数据成员
+    static int staticVar;
+
+    // 静态成员函数
+    static void staticFunction() {
+        std::cout << "Static function called." << std::endl;
+    }
+
+    // 非静态成员函数
+    void instanceFunction() {
+        std::cout << "Instance function called." << staticVar << std::endl;
+    }
+};
+
+// 静态数据成员的定义和初始化
+int MyClass::staticVar = 10;
+
+int main() {
+    // 直接通过类名访问静态成员
+    MyClass::staticFunction();
+    std::cout << MyClass::staticVar << std::endl;
+
+    // 创建实例来访问非静态成员
+    MyClass myObject;
+    myObject.instanceFunction();
+
+    return 0;
+}
+```
+
+
 
 
 
@@ -3866,13 +3976,69 @@ $$
 docker push
 # 下拉
 docker pull
-# 解压缩
-docker run
+# docker run
+docker run 是 Docker 命令行中用于创建和启动一个容器的命令。
+-d：后台运行容器，并打印容器ID。
+--name：为容器指定一个名称。
+--restart：设置容器的重启策略（如：always、on-failure等）。
+-e：设置环境变量。
+-v 或 --volume：挂载卷，用于数据持久化或共享。
+-p 或 --publish：端口映射，将容器内部的端口映射到宿主机。
+--rm：容器退出时自动清理容器文件系统。
+--network：指定容器的网络连接。
+--cpus：限制容器可以使用的CPU资源。
+-m 或 --memory：限制容器可以使用的内存。
+--gpus：指定容器可以使用的GPU资源。
+
+docker run -d -p 90000（宿主机）:80（容器内部） nginx:1.23
+
 # 构建容器镜像
-docker build
+docker build (-t)设置标签
 # 解析yaml文件，按顺序部署
 docker-compose up
+# 列出当前正在运行的容器
+docker ps (-a)
+# 停止&开始
+docker stop  xxxx
+docker start xxxx
+docker logs
 ```
+
+
+
+#### dockerfile
+
+Dockerfile 通常包含如下指令：
+
+- `FROM`：指定基础镜像。
+- `RUN`：执行命令行指令。
+- `CMD`：容器启动时默认执行的命令。
+- `EXPOSE`：声明容器运行时监听的端口。
+- `ENV`：设置环境变量。
+- `ADD` 和 `COPY`：复制新文件或目录到容器的文件系统。
+- `ENTRYPOINT`：配置容器启动时运行的命令。
+
+```dockerfile
+# 使用官方的 Python 运行时作为父镜像
+FROM python:3.8-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 将当前目录内容复制到容器的 /app 目录
+COPY . /app
+
+# 安装 requirements.txt 中的 Python 依赖
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 声明容器运行时监听的端口
+EXPOSE 5000
+
+# 运行 app.py 当容器启动时
+CMD ["python", "app.py"]
+```
+
+
 
 
 
