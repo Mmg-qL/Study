@@ -630,6 +630,63 @@ const A a(2,1);
 
 
 
+#### 组合
+
+* 组合是一种对象包含其他对象的关系。它是一种"has-a"关系，意味着一个类可以包含另一个类的实例作为其成员变量。组合是实现代码重用和模块化的一种方式。 
+
+```c++
+class Engine {
+public:
+    void start() { /* ... */ }
+    void stop() { /* ... */ }
+};
+
+class Car {
+private:
+    Engine engine; // Car has an Engine
+public:
+    void start() {
+        engine.start();
+    }
+    void stop() {
+        engine.stop();
+    }
+};
+```
+
+* 构造函数调用顺序先调用car的再调用Eigine，析构函数调用顺序先调用Eigine再调用car
+
+
+
+#### 委托
+
+* 委托者类持有一个函数指针或函数对象，该函数指针或函数对象指向受托者类的方法或一个独立的函数。 
+
+```c++
+class StringRep{
+   	friend class String;
+   	StringRep(const char* s);
+   	~StringRep();
+   	int count;
+   	char* rep;
+};
+
+class String{
+public:
+    String();
+    String(const char* s);
+    String(const String& s);
+    String &operator=(const String& s);
+    ~String();
+private:
+    StringRep* rep;	//委托
+}
+```
+
+
+
+
+
 #### 移动语义与完美转发
 
 1. 移动语义
